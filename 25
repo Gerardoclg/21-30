@@ -1,0 +1,94 @@
+--25
+.arch armv8-a                      // Especifica la arquitectura ARMv8-A
+
+    .data
+msg_ingreso:    .string "Ingrese una cadena: "
+msg_vocales:    .string "Número de vocales: %d\n"
+msg_consonantes: .string "Número de consonantes: %d\n"
+buffer:         .skip 100           // Buffer para almacenar la cadena
+formato_str:    .string "%[^\n]"    // Formato para leer hasta newline
+vocales:        .ascii "aeiouAEIOU" // Lista de vocales en minúsculas y mayúsculas
+
+    .text
+    .global main
+    .align 2
+
+main:
+    // Prólogo
+    stp     x29, x30, [sp, -32]!     // Guardar registros de enlace y base
+    mov     x29, sp                  // Establecer nuevo marco de pila
+
+    // Inicializar contadores en el stack
+    str     xzr, [sp, 16]            // Inicializar contador de vocales en 0
+    str     xzr, [sp, 24]            // Inicializar contador de consonantes en 0
+
+    // Mostrar mensaje de ingreso
+    adr     x0, msg_ingreso          // Cargar dirección de mensaje de ingreso
+    bl      printf                   // Llamada a printf para mostrar el mensaje
+
+    // Leer cadena del usuario
+    adr     x0, formato_str          // Formato para leer la cadena
+    adr     x1, buffer               // Dirección del buffer donde se almacena la cadena
+    bl      scanf                    // Llamada a scanf para leer la cadena
+
+    // Iniciar procesamiento de la cadena
+    adr     x0, buffer               // Dirección de la cadena
+    mov     x1, #0                   // Índice en la cadena
+
+procesar_char:
+    ldrb    w2, [x0, x1]             // Cargar carácter actual en w2
+    cbz     w2, fin_conteo           // Si es 0, fin de la cadena
+
+    // Verificar si el carácter es una letra
+    cmp     w2, #'A'
+    b.lt    siguiente_char           // Si es menor a 'A', no es letra
+    cmp     w2, #'z'
+    b.gt    siguiente_char           // Si es mayor a 'z', no es letra
+    cmp     w2, #'Z'
+    b.le    es_letra                 // Si está entre 'A' y 'Z', es letra
+    cmp     w2, #'a'
+    b.ge    es_letra                 // Si está entre 'a' y 'z', es letra
+    b       siguiente_char           // Si no es letra, pasar al siguiente
+
+es_letra:
+    // Verificar si es una vocal
+    adr     x3, vocales              // Dirección de la lista de vocales
+    mov     x4, #0                   // Índice en la lista de vocales
+
+check_vocal:
+    ldrb    w5, [x3, x4]             // Cargar vocal actual
+    cbz     w5, es_consonante        // Si llegamos al final, es consonante
+    cmp     w2, w5                   // Comparar carácter con vocal actual
+    b.eq    es_vocal                 // Si es igual, es una vocal
+    add     x4, x4, #1               // Incrementar índice de vocal
+    b       check_vocal              // Repetir comparación
+
+es_vocal:
+    ldr     x4, [sp, 16]             // Cargar contador de vocales
+    add     x4, x4, #1               // Incrementar contador
+    str     x4, [sp, 16]             // Guardar nuevo valor
+    b       siguiente_char
+
+es_consonante:
+    ldr     x4, [sp, 24]             // Cargar contador de consonantes
+    add     x4, x4, #1               // Incrementar contador
+    str     x4, [sp, 24]             // Guardar nuevo valor
+
+siguiente_char:
+    add     x1, x1, #1               // Avanzar al siguiente carácter en la cadena
+    b       procesar_char            // Repetir procesamiento
+
+fin_conteo:
+    // Mostrar resultados
+    adr     x0, msg_vocales          // Mensaje de número de vocales
+    ldr     x1, [sp, 16]             // Cargar número de vocales en x1
+    bl      printf                   // Mostrar número de vocales
+
+    adr     x0, msg_consonantes      // Mensaje de número de consonantes
+    ldr     x1, [sp, 24]             // Cargar número de consonantes en x1
+    bl      printf                   // Mostrar número de consonantes
+
+    // Epílogo y retorno
+    mov     w0, #0                   // Retorno de 0
+    ldp     x29, x30, [sp], 32       // Restaurar registros de enlace y base
+    ret
