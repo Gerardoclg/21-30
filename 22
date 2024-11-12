@@ -1,1 +1,41 @@
 --22
+    .arch armv8-a                // Especifica la arquitectura ARMv8-A
+
+    .data
+msg_ingreso:    .string "Ingrese la letra a convertir a entero: "
+msg_resultado:  .string "El valor entero es: %d\n"
+formato_char:   .string " %c"          // Formato para leer un solo carácter con scanf
+buffer:         .skip 2                // Buffer para almacenar el carácter
+
+    .text
+    .global main
+    .align 2
+
+main:
+    // Prologo
+    stp     x29, x30, [sp, -16]!       // Guardar registros de enlace y base
+    mov     x29, sp                    // Establecer nuevo marco de pila
+
+    // Mostrar mensaje de ingreso
+    adr     x0, msg_ingreso            // Cargar dirección de mensaje de ingreso
+    bl      printf                     // Llamada a printf para mostrar el mensaje
+
+    // Leer carácter
+    adr     x0, formato_char           // Formato de lectura de un carácter
+    adr     x1, buffer                 // Dirección de buffer donde se almacena el carácter
+    bl      scanf                      // Llamada a scanf para leer el carácter
+
+    // Convertir ASCII a entero
+    adr     x0, buffer                 // Dirección del buffer con el carácter leído
+    ldrb    w0, [x0]                   // Cargar el carácter ASCII en w0
+    sub     w0, w0, #48                // Restar 48 para convertir ASCII a número entero
+
+    // Mostrar resultado
+    mov     w1, w0                     // Mover el resultado a w1 para pasar a printf
+    adr     x0, msg_resultado          // Cargar dirección de mensaje de resultado
+    bl      printf                     // Llamada a printf para mostrar el resultado
+
+    // Epílogo y retorno
+    mov     w0, #0                     // Retornar 0
+    ldp     x29, x30, [sp], 16         // Restaurar registros de enlace y base
+    ret
