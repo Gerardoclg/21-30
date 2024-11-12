@@ -1,0 +1,56 @@
+-23
+    .arch armv8-a                     // Especifica la arquitectura ARMv8-A
+
+    .data
+msg_ingreso:    .string "Ingrese un número entero (0-9): "
+msg_resultado:  .string "El carácter ASCII es: %c\n"
+formato_int:    .string "%d"           // Formato para leer entero
+numero:         .word 0                // Variable para almacenar el número
+
+    .text
+    .global main
+    .align 2
+
+main:
+    // Prólogo
+    stp     x29, x30, [sp, -16]!       // Guardar registros de enlace y base
+    mov     x29, sp                    // Establecer nuevo marco de pila
+
+    // Mostrar mensaje de ingreso
+    adr     x0, msg_ingreso            // Cargar dirección de mensaje de ingreso
+    bl      printf                     // Llamada a printf para mostrar el mensaje
+
+    // Leer número entero
+    adr     x0, formato_int            // Formato de lectura de un número entero
+    adr     x1, numero                 // Dirección de variable donde se almacena el número
+    bl      scanf                      // Llamada a scanf para leer el número
+
+    // Cargar el número y verificar si está entre 0 y 9
+    adr     x0, numero                 // Dirección de la variable con el número leído
+    ldr     w0, [x0]                   // Cargar el valor del número en w0
+    cmp     w0, #0                     // Comprobar si el número es >= 0
+    blt     entrada_invalida           // Si es menor, ir a "entrada_invalida"
+    cmp     w0, #9                     // Comprobar si el número es <= 9
+    bgt     entrada_invalida           // Si es mayor, ir a "entrada_invalida"
+
+    // Convertir entero a ASCII
+    add     w1, w0, #48                // Sumar 48 para convertir el número en carácter ASCII
+
+    // Mostrar resultado
+    adr     x0, msg_resultado          // Cargar dirección de mensaje de resultado
+    bl      printf                     // Llamada a printf para mostrar el carácter ASCII
+
+    // Epílogo y retorno
+    mov     w0, #0                     // Retornar 0
+    ldp     x29, x30, [sp], 16         // Restaurar registros de enlace y base
+    ret
+
+entrada_invalida:
+    // Mensaje de entrada inválida
+    adr     x0, invalid_input_msg      // Mostrar mensaje de entrada inválida
+    bl      printf
+    b       main                       // Reiniciar el programa
+
+// Mensaje de entrada inválida
+invalid_input_msg:
+    .string "Entrada no válida. Por favor, ingrese un número entre 0 y 9.\n"
