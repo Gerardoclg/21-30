@@ -1,6 +1,4 @@
 --28
-// Autor: Pozos Flores Norberto
-// Fecha: 12/11/2024
 // Descripción: Establecer, borrar y alternar bits en un número.
 
 .data
