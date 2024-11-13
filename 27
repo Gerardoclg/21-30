@@ -1,6 +1,4 @@
 --27
-// Autor: Pozos Flores Norberto
-// Fecha: 12/11/2024
 // Descripción: Programa que realiza desplazamientos de bits (izquierda y derecha) de números en ARM64.
 
 .data
